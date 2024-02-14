@@ -1,32 +1,25 @@
----
-version: "3.8"
-
+version: '3'
 services:
-  socketio-server:
-    container_name: socketio-server
-    build:
-      target: production
-      context: .
-      args:
-        - PORT=${PORT}
+  redis:
+    image: redis
+    restart: always
     ports:
-      - "${PORT}:${PORT}"
+      - "6379:6379"
+    networks:
+      - nest_network
 
-  socketio-server-dev:
-    container_name: socketio-server-dev
-    restart: unless-stopped
-    env_file: .env
+  nest_app:
+    restart: always
     build:
-      target: dev
-      context: .
-      args:
-        - PORT=${PORT}
+      context: ./
+      dockerfile: Dockerfile
     ports:
-      - "${PORT}:${PORT}"
-      - "9229:9229"
-    volumes:
-      - .:/project
-      - node_modules:/project/node_modules/
+      - "3000:3000"
+    env_file:
+      - .env.docker
+    networks:
+      - nest_network
 
-volumes:
-  node_modules:
+networks:
+  nest_network:
+    driver: bridge
