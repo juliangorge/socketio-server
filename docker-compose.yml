@@ -1,0 +1,32 @@
+---
+version: "3.8"
+
+services:
+  socketio-server:
+    container_name: socketio-server
+    build:
+      target: production
+      context: .
+      args:
+        - PORT=${PORT}
+    ports:
+      - "${PORT}:${PORT}"
+
+  socketio-server-dev:
+    container_name: socketio-server-dev
+    restart: unless-stopped
+    env_file: .env
+    build:
+      target: dev
+      context: .
+      args:
+        - PORT=${PORT}
+    ports:
+      - "${PORT}:${PORT}"
+      - "9229:9229"
+    volumes:
+      - .:/project
+      - node_modules:/project/node_modules/
+
+volumes:
+  node_modules:
