@@ -1,29 +1,31 @@
 import { CacheInterceptor } from '@nestjs/cache-manager';
-import { Controller, Get, Param, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Request, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Public } from '../auth/guard/jwt-auth.guard';
 import { SocketService } from '../socket/socket.service';
+import { NotificationsService } from './notifications.service';
+import { NewNotificationDto } from 'src/dto/new-notification.dto';
+
 
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private socketService: SocketService) {}
+  constructor(
+    private socketService: SocketService,
+    private notificationsService: NotificationsService
+  ) {}
 
-  //@UseInterceptors(CacheInterceptor)
-  @Get(':userId')
+  // Next step: add auth
+
+  @Post()
   @Public()
   //@UseGuards(AuthGuard('basic'))
-  findByUserId(@Param('userId') userId: string): string {
-    this.socketService.emit('getNotifications', 'content', userId)
-    return 'Este será un POST y emitirá un mensaje a socket';
+  async emit(@Body() data: NewNotificationDto): Promise<any> {
+    await this.notificationsService.create(data)
+  
+    const content = await this.notificationsService.getLastResults(data.user_id)
+  
+    await this.socketService.emit('getNotifications', content, data.user_id.toString());
+    return content;
   }
-
-  //@UseInterceptors(CacheInterceptor)
-  @Get()
-  @Public()
-  //@UseGuards(AuthGuard('basic'))
-  findAll(): string {
-    //const userId = '1'
-    this.socketService.emit('getNotifications', 'content')
-    return 'Este será un POST y emitirá un mensaje a socket';
-  }
+  
 }
